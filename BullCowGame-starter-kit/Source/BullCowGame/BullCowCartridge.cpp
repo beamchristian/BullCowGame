@@ -1,12 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "BullCowCartridge.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 void UBullCowCartridge::BeginPlay() // When the game starts
 {
     Super::BeginPlay();
 
+    const FString WordListPath = FPaths::ProjectContentDir() / TEXT("WordLists/HiddenWordList.txt");
+    FFileHelper::LoadFileToStringArray(Words, *WordListPath);
+
+    GetValidWords(Words);
+    
     SetupGame();
 
+    PrintLine(TEXT("The number of possible words is %i."), Words.Num());
+    PrintLine(TEXT("The number of valid words is: %i"), GetValidWords(Words).Num());
     PrintLine(TEXT("The HiddenWord is: %s."), *HiddenWord); // Debug Line
 }
 
@@ -35,10 +44,6 @@ void UBullCowCartridge::SetupGame()
     PrintLine(TEXT("Guess the %i letter word!"), HiddenWord.Len());
     PrintLine(TEXT("You have %i lives"), Lives);
     PrintLine(TEXT("Type in your guess and \nPress enter to continue..."));  // Prompt Player for Guess
-
-    // const TCHAR HW[] = TEXT("plums");
-    // PrintLine(TEXT("Character 1 of the hidden word is: %c"), HiddenWord[0]);
-    // PrintLine(TEXT("The 4th character of HW is: %c"), HW[3]); // prints "m"
 }
 
 void UBullCowCartridge::EndGame()
@@ -99,12 +104,23 @@ bool UBullCowCartridge::IsIsogram(FString Word) const
        }
        
     }
-    
     return true;
-    
-    // For each letter
-    // Start at element [0]
-    // Compare against the next letter
-    // Until we reach [Word.Len() -1].
-    // if any are the same return false.
 }
+
+TArray<FString> UBullCowCartridge::GetValidWords(TArray<FString> WordList) const
+{
+TArray<FString> ValidWords;
+
+    for (int32 Index = 0; Index < WordList.Num(); Index++)
+    {
+        if (WordList[Index].Len() >= 4 && WordList[Index].Len() <= 8)
+        {
+            if (IsIsogram(WordList[Index])) 
+            {
+                ValidWords.Emplace(WordList[Index]);
+            }
+        }
+    }
+    return ValidWords;
+}
+
